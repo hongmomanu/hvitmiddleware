@@ -24,4 +24,14 @@
   
 
 
-  ) 
+  )
+  
+(defn create-oraclequery-paging [{:keys [table properties order predicate from max] :or {max 100} }]
+  "Creates a SQL query using paging and ROWNUM"
+  (str "SELECT * from (select " (clojure.string/join "," (map #(str "a." %) properties))
+    ", ROWNUM rnum from (select " (clojure.string/join "/" properties)
+    " from " table
+    " order by " (clojure.string/join "," order) " ) a "
+    " WHERE ROWNUM <= " max
+    ") WHERE " (if-not predicate "" (str predicate " and ")) " rnum >= " from))  
+   
