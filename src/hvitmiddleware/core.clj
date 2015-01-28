@@ -1,4 +1,10 @@
 (ns hvitmiddleware.core
+
+(:import 
+           (hvitmiddleware.java ExcelHelper)
+           
+ )
+           
 (:require 
             [noir.response :as resp]
             [clj-http.client :as client]
@@ -8,6 +14,17 @@
   "I don't do a whole lot."
   [x]
   (println x "Hello, World!"))
+  
+(defn make-excel [fileName header_arr rowdata sum title headerheight headercols  isall url  extraParams  rowname  pager]
+ ;(println "hello world")
+ (try
+      
+        (ExcelHelper/writeExcel fileName header_arr rowdata sum title headerheight headercols  isall url  extraParams  rowname  pager) 
+      (catch Exception ex
+        {:isok false :msg (.getMessage ex)})
+       )
+ 
+ ) 
 
 (defn session-filter [handler url]
   (fn [req]
@@ -27,11 +44,18 @@
   )
   
 (defn create-oraclequery-paging [{:keys [table properties order predicate from max] :or {max 100} }]
-  "Creates a SQL query using paging and ROWNUM"
+  "Creates a ORLCESQL query using paging and ROWNUM"
   (str "SELECT * from (select " (clojure.string/join "," (map #(str "a." %) properties))
-    ", ROWNUM rnum from (select " (clojure.string/join "/" properties)
+    ", ROWNUM rnum from (select " (clojure.string/join "," properties)
     " from " table
+    (if-not predicate "" (str " where " predicate "  "))
     " order by " (clojure.string/join "," order) " ) a "
     " WHERE ROWNUM <= " max
-    ") WHERE " (if-not predicate "" (str predicate " and ")) " rnum >= " from))  
+    ") WHERE "  " rnum >= " from))
    
+(defn get-oraclequery-total [{:keys [table predicate ]}]
+  "Get a ORLCESQL query totalnum"
+  (str "SELECT count(*) "
+    " from " table
+    " " (if-not predicate "" (str " WHERE " predicate " "))))
+
